@@ -1,0 +1,32 @@
+{
+  "scenario": "support-ticket-api",
+  "name": "Support Ticket API",
+  "templateRepo": "coding-eval-test/scenario-support-ticket-api",
+  "projectPath": "src/SupportTicketApi",
+  "docsAllowList": [
+    "NotFoundException",
+    "ConflictException"
+  ],
+  "categories": [
+    {
+      "category": "S1",
+      "points": 30,
+      "label": "S1 assign a ticket to an agent"
+    },
+    {
+      "category": "S2",
+      "points": 30,
+      "label": "S2 ticket comment thread"
+    },
+    {
+      "category": "B1",
+      "points": 20,
+      "label": "B1 ticket queue ordering"
+    },
+    {
+      "category": "Regression",
+      "points": 20,
+      "label": "Existing behaviour (regression)"
+    }
+  ]
+}

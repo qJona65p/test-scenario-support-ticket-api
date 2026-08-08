@@ -1,0 +1,30 @@
+@host = http://localhost:5000
+
+### Health
+GET {{host}}/health
+
+### The open ticket queue
+GET {{host}}/api/tickets?page=1&pageSize=20
+
+### One ticket
+GET {{host}}/api/tickets/1
+
+### Raise a ticket
+POST {{host}}/api/tickets
+Content-Type: application/json
+
+{
+  "subject": "Cannot download my receipt",
+  "description": "The receipt link returns an empty file.",
+  "priority": "High",
+  "requesterEmail": "someone@example.test"
+}
+
+### Resolve a ticket
+POST {{host}}/api/tickets/7/resolve
+
+### Every agent
+GET {{host}}/api/agents
+
+### One agent's open workload
+GET {{host}}/api/agents/1/workload
