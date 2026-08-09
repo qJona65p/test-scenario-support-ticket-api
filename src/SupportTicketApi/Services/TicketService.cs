@@ -29,8 +29,11 @@ public class TicketService : ITicketService
         var totalCount = await query.CountAsync(cancellationToken);
 
         var items = await query
-            .OrderByDescending(t => t.Priority)
-            .ThenByDescending(t => t.CreatedUtc)
+            .OrderByDescending(t => // Tried to just cast (int)t.Priority but dunno why it fails too
+                t.Priority == TicketPriority.Urgent ? 4 :
+                t.Priority == TicketPriority.High ? 3 :
+                t.Priority == TicketPriority.Normal ? 2 : 1)
+            .ThenBy(t => t.CreatedUtc)
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
             .Select(t => new TicketSummaryResponse(

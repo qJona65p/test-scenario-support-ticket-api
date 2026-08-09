@@ -61,8 +61,8 @@ public class AssignTicketRequest{
 }
 
 public class TicketCommentRequest{
-    [StringLength(200, MinimumLength = 1)] public string AuthorName { get; set; }
-    [StringLength(200, MinimumLength = 1)] public string Body { get; set; }
+    [Required, StringLength(200, MinimumLength = 1)] public string AuthorName { get; set; }
+    [Required, StringLength(200, MinimumLength = 1)] public string Body { get; set; }
     public bool IsInternal { get; set; }
 }
 
