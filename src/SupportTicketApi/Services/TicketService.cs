@@ -63,6 +63,38 @@ public class TicketService : ITicketService
         return Map(ticket);
     }
 
+    public async Task<List<TicketCommentResponse>> GetCommentsByIdAsync(int id, CancellationToken cancellationToken, bool? includeInternal = false)
+    {
+        if (!(await _db.Tickets.AnyAsync(t => t.Id == id))) throw new NotFoundException($"Ticket {id} was not found.");
+
+        var comments = _db.Comments
+            .AsNoTracking()
+            .Where(c => c.TicketId == id);
+
+        if (includeInternal! == true) return await comments.Select(c => Map(c)).ToListAsync(cancellationToken);
+        else return await comments.Where(c => c.IsInternal == false).Select(c => Map(c)).ToListAsync(cancellationToken);
+    }
+
+    public async Task<TicketCommentResponse> PostComment(int id, TicketCommentRequest request, CancellationToken cancellationToken)
+    {
+        var ticket = await _db.Tickets.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+        if (ticket is null) throw new NotFoundException($"Ticket {id} not found.");
+
+        var comment = new Comment
+        {
+            Ticket = ticket,
+            AuthorName = request.AuthorName,
+            Body = request.Body,
+            IsInternal = request.IsInternal,
+            CreatedUtc = _clock.GetUtcNow().UtcDateTime
+        };
+
+        _db.Comments.Add(comment);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return Map(comment);
+    }
+
     public async Task<TicketDetailResponse> CreateAsync(
         CreateTicketRequest request, CancellationToken cancellationToken)
     {
@@ -110,6 +142,28 @@ public class TicketService : ITicketService
         return Map(ticket);
     }
 
+    public async Task<TicketDetailResponse?> AssignTicketTo(int id, int agentId, CancellationToken cancellationToken)
+    {
+        var agent = await _db.Agents.FirstOrDefaultAsync(a => a.Id == agentId, cancellationToken);
+        if (agent is null) throw new NotFoundException($"Agent {agentId} was not found.");
+        if (!agent.IsActive) throw new ConflictException($"Agent {agentId} is inactive");
+
+        var ticket = await _db.Tickets
+            .Include(t => t.AssignedAgent)
+            .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+
+        if (ticket is null) throw new NotFoundException($"Ticket {id} was not found.");
+        if (ticket.Status == TicketStatus.Resolved || ticket.Status == TicketStatus.Closed)
+            throw new ConflictException($"Ticket {id} has already been solved");
+
+        ticket.AssignedAgent = agent;
+        ticket.Status = TicketStatus.Assigned;
+
+        await _db.SaveChangesAsync();
+
+        return Map(ticket);
+    }
+
     private static TicketDetailResponse Map(Ticket ticket) => new(
         ticket.Id,
         ticket.Reference,
@@ -122,4 +176,12 @@ public class TicketService : ITicketService
         ticket.AssignedAgent?.Name,
         ticket.CreatedUtc,
         ticket.ResolvedUtc);
+
+    private static TicketCommentResponse Map(Comment comment) => new(
+        comment.Id,
+        comment.TicketId,
+        comment.AuthorName,
+        comment.Body,
+        comment.IsInternal,
+        comment.CreatedUtc);
 }

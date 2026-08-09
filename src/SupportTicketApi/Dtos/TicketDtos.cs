@@ -54,3 +54,23 @@ public class TicketQueueRequest
     [Range(1, 200)]
     public int PageSize { get; set; } = 20;
 }
+
+public class AssignTicketRequest{
+    [Range(1, int.MaxValue)]
+    public int AgentId { get; set; }
+}
+
+public class TicketCommentRequest{
+    [StringLength(200, MinimumLength = 1)] public string AuthorName { get; set; }
+    [StringLength(200, MinimumLength = 1)] public string Body { get; set; }
+    public bool IsInternal { get; set; }
+}
+
+public record TicketCommentResponse(
+    int Id,
+    int TicketId,
+    string AuthorName,
+    string Body,
+    bool IsInternal,
+    DateTime CreatedUtc
+);
